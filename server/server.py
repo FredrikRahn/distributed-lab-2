@@ -59,7 +59,7 @@ class BlackboardServer(HTTPServer):
 		self.leader = None
 
 		#init leader election
-		self.init_leader_election(self.leader_list)
+		self.init_thread_leader_election(self.leader_list)
 #------------------------------------------------------------------------------------------------------
 	# We add a value received to the store
 	def add_value_to_store(self, value):
@@ -163,8 +163,6 @@ class BlackboardServer(HTTPServer):
 				self.contact_vessel(vessel, path, action, key, value)
 #------------------------------------------------------------------------------------------------------
 	def leader_election(self, leader_list):
-		#Sleep before starting election (to wait for server to start)
-		time.sleep(1)
 		#Convert leader_list to dict (from string)
 		if isinstance(leader_list, basestring):
 			leader_list = ast.literal_eval(leader_list)
@@ -201,13 +199,18 @@ class BlackboardServer(HTTPServer):
 		print(self.leader_list)
 		self.leader = sorted(self.leader_list.items(), key=lambda tuple: tuple[1], reverse = True)[0][0]
 #------------------------------------------------------------------------------------------------------
-	def init_leader_election(self, leader_list):
-		leader_election_thread = Thread(target=self.leader_election, args=(leader_list,))
+	def init_thread_leader_election(self, leader_list):
+		leader_election_thread = Thread(target=self.init_leader_election, args=(leader_list,))
 		print('Created thread for leader election')
 		# We kill the process if we kill the server
 		leader_election_thread.daemon = True
 		# We start the thread
 		leader_election_thread.start()
+#------------------------------------------------------------------------------------------------------
+	def init_leader_election(self, leader_list):
+		#Sleep before starting election (to wait for server to start)
+		time.sleep(1)
+		self.init_thread_leader_election(leader_list)
 #------------------------------------------------------------------------------------------------------
 # This class implements the logic when a server receives a GET or POST
 # It can access to the server data through self.server.*
