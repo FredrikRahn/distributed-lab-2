@@ -14,7 +14,7 @@ from urlparse import parse_qs # Parse POST data
 from httplib import HTTPConnection # Create a HTTP connection, as a client (for POST requests to the other vessels)
 from urllib import urlencode # Encode POST content into the HTTP header
 from codecs import open # Open a file
-from threading import  Thread # Thread Management
+from threading import Timer, Thread # Thread Management
 from random import randint
 import time
 import ast
@@ -201,7 +201,7 @@ class BlackboardServer(HTTPServer):
 		self.leader = sorted(self.leader_list.items(), key=lambda tuple: tuple[1], reverse = True)[0][0]
 #------------------------------------------------------------------------------------------------------
 	def init_leader_election(self, leader_list):
-		leader_election_thread = Thread(target=self.leader_election, args=(leader_list,))
+		leader_election_thread = Timer(2, self.leader_election, [leader_list])
 		print('Created thread for leader election')
 		# We kill the process if we kill the server
 		leader_election_thread.daemon = True
