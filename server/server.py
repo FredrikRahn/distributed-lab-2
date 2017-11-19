@@ -54,7 +54,7 @@ class BlackboardServer(HTTPServer):
 		#init random ID
 		self.random_ID = randint(0,1000);
 		#init leader List
-		self.leader_list = {}
+		self.leader_list = {'creator': vessel_id}
 		#init leader
 		self.leader = None
 
@@ -169,7 +169,7 @@ class BlackboardServer(HTTPServer):
 		if isinstance(leader_list, basestring):
 			leader_list = ast.literal_eval(leader_list)
 		#Check whether node exists in list to check if we're done propagating
-		if self.vessel_id in leader_list:
+		if self.vessel_id in leader_list and leader_list['creator'] == self.vessel_id:
 			print("leader list ", leader_list)
 			self.leader_list = leader_list
 			self.set_leader()
@@ -190,6 +190,7 @@ class BlackboardServer(HTTPServer):
 			print("Vessel id = ", self.vessel_id)
 			print('Updated recieved leader_list = ', leader_list)
 			path = '/election'
+			#TODO: Make func to only contact vessels that got time out after one iteration
 			self.contact_vessel(vessel_ip=next, path=path, action='election', key=None, value=leader_list)
 
 #------------------------------------------------------------------------------------------------------
