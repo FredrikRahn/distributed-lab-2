@@ -176,7 +176,7 @@ class BlackboardServer(HTTPServer):
 			print(self.leader_list)
 			print("leader is: ", self.leader)
 		else:
-			print("recieved leader election message")
+			#print("recieved leader election message")
 			#Populate local leader_list with the nodes random_ID
 			leader_list[self.vessel_id] = self.random_ID
 			#Find next index in vessels
@@ -187,8 +187,8 @@ class BlackboardServer(HTTPServer):
 			next_index = self.vessels.index('10.1.0.%d' % nextid)
 			next = self.vessels[next_index]
 			#Send leader_list to next
-			print("Vessel id = ", self.vessel_id)
-			print('Updated recieved leader_list = ', leader_list)
+			#print("Vessel id = ", self.vessel_id)
+			#print('Updated recieved leader_list = ', leader_list)
 			path = '/election'
 			#TODO: Make func to only contact vessels that got time out after one iteration
 			self.contact_vessel(vessel_ip=next, path=path, action='election', key=None, value=leader_list)
