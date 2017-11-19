@@ -58,7 +58,7 @@ class BlackboardServer(HTTPServer):
 		self.leader = None
 
 		#init leader election
-		self.init_leader_election()
+		self.init_leader_election(self.leader_list)
 #------------------------------------------------------------------------------------------------------
 	# We add a value received to the store
 	def add_value_to_store(self, value):
@@ -197,13 +197,13 @@ class BlackboardServer(HTTPServer):
 		print(self.leader_list)
 		self.leader = sorted(self.leader_list.items(), key=lambda tuple: tuple[1], reverse = True)[0][0]
 #------------------------------------------------------------------------------------------------------
-	def init_leader_election(self):
-		thread = Thread(target=self.leader_election, args=({})
+	def init_leader_election(self, leader_list):
+		leader_election_thread = Thread(target=self.leader_election, args=(leader_list,))
 		print('Created thread for leader election')
 		# We kill the process if we kill the server
-		thread.daemon = True
+		leader_election_thread.daemon = True
 		# We start the thread
-		thread.start()
+		leader_election_thread.start()
 #------------------------------------------------------------------------------------------------------
 # This class implements the logic when a server receives a GET or POST
 # It can access to the server data through self.server.*
@@ -455,7 +455,7 @@ if __name__ == '__main__':
 	# We launch a server
 	server = BlackboardServer(('', PORT_NUMBER), BlackboardRequestHandler, vessel_id, vessel_list)
 	print("Starting the server on port %d" % PORT_NUMBER)
-	
+
 	try:
 		server.serve_forever()
 	except KeyboardInterrupt:
