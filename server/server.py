@@ -164,7 +164,7 @@ class BlackboardServer(HTTPServer):
 #------------------------------------------------------------------------------------------------------
 	def leader_election(self, leader_list):
 		#Sleep before starting election (to wait for server to start)
-		time.sleep(10)
+		time.sleep(1)
 		#Convert leader_list to dict (from string)
 		if isinstance(leader_list, basestring):
 			leader_list = ast.literal_eval(leader_list)
