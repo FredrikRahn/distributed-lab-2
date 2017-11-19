@@ -431,7 +431,12 @@ class BlackboardRequestHandler(BaseHTTPRequestHandler):
 		action = post_data['action'][0]
 		if action == 'election':
 			value = post_data['value'][0]
-			self.server.leader_election(value)
+			thread = Thread(target=self.server.leader_election, args=(value,))
+			print('Created leader_election thread from POST req')
+			# We kill the process if we kill the serverx
+			thread.daemon = True
+			# We start the thread
+			thread.start()
 			self.send_response(200)
 		else:
 			self.send_error(400, 'Invalid Action')
