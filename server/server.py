@@ -16,6 +16,7 @@ from urllib import urlencode # Encode POST content into the HTTP header
 from codecs import open # Open a file
 from threading import  Thread # Thread Management
 from random import randint
+import time
 #------------------------------------------------------------------------------------------------------
 #Get correct folder path
 file_folder = os.path.dirname(os.path.realpath(__file__)) + '/'
@@ -57,7 +58,9 @@ class BlackboardServer(HTTPServer):
 		self.leader = None
 
 		#start leader leader_election
+		time.sleep(10)
 		self.leader_election(self.leader_list)
+
 #------------------------------------------------------------------------------------------------------
 	# We add a value received to the store
 	def add_value_to_store(self, value):
@@ -162,7 +165,7 @@ class BlackboardServer(HTTPServer):
 #------------------------------------------------------------------------------------------------------
 	def leader_election(self, leader_list):
 		#Check whether node exists in list to check if we're done propagating
-		if str(self.vessel_id) in leader_list:
+		if self.vessel_id in leader_list:
 			print("leader list ", leader_list)
 			self.leader_list = leader_list
 			self.set_leader()
