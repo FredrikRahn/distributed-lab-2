@@ -15,6 +15,7 @@ from httplib import HTTPConnection # Create a HTTP connection, as a client (for 
 from urllib import urlencode # Encode POST content into the HTTP header
 from codecs import open # Open a file
 from threading import  Thread # Thread Management
+from random import randint
 #------------------------------------------------------------------------------------------------------
 #Get correct folder path
 file_folder = os.path.dirname(os.path.realpath(__file__)) + '/'
