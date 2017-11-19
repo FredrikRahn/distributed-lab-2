@@ -57,6 +57,8 @@ class BlackboardServer(HTTPServer):
 		#init leader
 		self.leader = None
 
+		#init leader election
+		self.init_leader_election()
 #------------------------------------------------------------------------------------------------------
 	# We add a value received to the store
 	def add_value_to_store(self, value):
