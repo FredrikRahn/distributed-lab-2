@@ -58,7 +58,7 @@ class BlackboardServer(HTTPServer):
 		@return: [Key:String, Value:String]
 		'''
 		# We add the value to the store
-		self.current_key += 1
+		self.current_key = randint(0, 1000)
 		key = self.current_key
 		if key not in self.store:
 			self.store[key]=value
