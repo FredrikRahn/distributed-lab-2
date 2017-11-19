@@ -17,6 +17,7 @@ from codecs import open # Open a file
 from threading import  Thread # Thread Management
 from random import randint
 import time
+import ast
 #------------------------------------------------------------------------------------------------------
 #Get correct folder path
 file_folder = os.path.dirname(os.path.realpath(__file__)) + '/'
@@ -164,6 +165,8 @@ class BlackboardServer(HTTPServer):
 	def leader_election(self, leader_list):
 		#Sleep before starting election (to wait for server to start)
 		time.sleep(10)
+		#Convert leader_list to dict (from string)
+
 		#Check whether node exists in list to check if we're done propagating
 		if self.vessel_id in leader_list:
 			print("leader list ", leader_list)
@@ -429,7 +432,7 @@ class BlackboardRequestHandler(BaseHTTPRequestHandler):
 		action = post_data['action'][0]
 		if action == 'election':
 			value = post_data['value'][0]
-			print("value is = ", value)
+			print("value is = ", ast.literal_eval(value))
 			self.server.leader_election(value)
 			self.send_response(200)
 		else:
