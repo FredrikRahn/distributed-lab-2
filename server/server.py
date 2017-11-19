@@ -174,10 +174,10 @@ class BlackboardServer(HTTPServer):
 			self.leader_list = leader_list
 			self.set_leader()
 			print(self.leader_list)
-			print("leader is: " + self.leader)
+			print("leader is: ", self.leader)
 		else:
 			print("recieved leader election message")
-			print("Vessel id = " + str(self.vessel_id))
+			print("Vessel id = ", self.vessel_id)
 			#Populate local leader_list with the nodes random_ID
 			leader_list[self.vessel_id] = self.random_ID
 			#Find next index in vessels

@@ -28,11 +28,11 @@ class Lab1Topology( Topo ):
 		# local configuration parameters
 		regionalLinkBandwidth = 100 # Mbps
 		regionalLinkLosses = 0.00001 # 1e-5 PER
-		regionalDelay = 10 # ms, delay = RTT/2
+		regionalDelay = 0 # ms, delay = RTT/2        10
 		# internet configuration parameters
 		globalLinkBandwidth = 1000 # Mbps
 		globalLinkLosses = 0.00001 # 1e-5 PER
-		globalDelay = 50 # ms, delay = RTT/2
+		globalDelay = 0 # ms, delay = RTT/2          50
 		# arrays
 		switches = []
 		servers = []
