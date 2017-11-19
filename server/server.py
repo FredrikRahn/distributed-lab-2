@@ -169,7 +169,7 @@ class BlackboardServer(HTTPServer):
 		if isinstance(leader_list, basestring):
 			leader_list = ast.literal_eval(leader_list)
 		#Check whether node exists in list to check if we're done propagating
-		if self.vessel_id in leader_list and leader_list['creator'] == self.vessel_id:
+		if self.vessel_id in leader_list and leader_list['creator'] == self.vessel_id and len(leader_list) == (len(self.vessels) + 1):
 			print("leader list ", leader_list)
 			self.leader_list = leader_list
 			self.set_leader()
