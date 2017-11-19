@@ -429,6 +429,7 @@ class BlackboardRequestHandler(BaseHTTPRequestHandler):
 		action = post_data['action'][0]
 		if action == 'election':
 			value = post_data['value'][0]
+			print("value is = ", value)
 			self.server.leader_election(value)
 			self.send_response(200)
 		else:
