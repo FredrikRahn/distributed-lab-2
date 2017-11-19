@@ -9,7 +9,7 @@
 # We import various libraries
 from BaseHTTPServer import HTTPServer, BaseHTTPRequestHandler # Socket specifically designed to handle HTTP requests
 import sys # Retrieve arguments
-import os 	#Folder stuff n folders n shit
+import os 	#Folder stuff #TODO LÖS
 from urlparse import parse_qs # Parse POST data
 from httplib import HTTPConnection # Create a HTTP connection, as a client (for POST requests to the other vessels)
 from urllib import urlencode # Encode POST content into the HTTP header
@@ -49,6 +49,15 @@ class BlackboardServer(HTTPServer):
 		self.vessel_id = vessel_id
 		# The list of other vessels
 		self.vessels = vessel_list
+		#init random ID
+		self.random_ID = randint(0,1000);
+		#init leader List
+		self.leader_list = {}
+		#init leader
+		self.leader = None
+
+		#start leader leader_election
+		self.leader_election(self.leader_list)
 #------------------------------------------------------------------------------------------------------
 	# We add a value received to the store
 	def add_value_to_store(self, value):
@@ -58,7 +67,8 @@ class BlackboardServer(HTTPServer):
 		@return: [Key:String, Value:String]
 		'''
 		# We add the value to the store
-		self.current_key = randint(0, 1000)
+		#TODO: uuid4
+		self.current_key += 1
 		key = self.current_key
 		if key not in self.store:
 			self.store[key]=value
@@ -149,6 +159,41 @@ class BlackboardServer(HTTPServer):
 				# A good practice would be to try again if the request failed
 				# Here, we do it only once
 				self.contact_vessel(vessel, path, action, key, value)
+#------------------------------------------------------------------------------------------------------
+	def leader_election(self, leader_list):
+		#Check whether node exists in list to check if we're done propagating
+		if str(self.vessel_id) in leader_list:
+			print("leader list ", leader_list)
+			self.leader_list = leader_list
+			self.set_leader()
+			print(self.leader_list)
+			print("leader is: " + self.leader)
+		else:
+			print("recieved leader election message")
+			print("Vessel id = " + str(self.vessel_id))
+			#Populate local leader_list with the nodes random_ID
+			leader_list[self.vessel_id] = self.random_ID
+			#Find next index in vessels
+			print("Self.vessels = ", self.vessels)
+			nextid = (self.vessel_id + 1) % (len(self.vessels) + 1)
+			#Check whether nextid point to 0 (non-existant), set 1 if so
+			if nextid == 0:
+				nextid = 1;
+			next_index = self.vessels.index('10.1.0.%d' % nextid)
+			print("Next_index = ",  next_index)
+			next = self.vessels[next_index]
+			print("Next = ",  next)
+			#Send leader_list to next
+			path = '/election'
+			self.contact_vessel(vessel_ip=next, path=path, action='election', key=None, value=leader_list)
+
+#------------------------------------------------------------------------------------------------------
+	def set_leader(self):
+		#Sort leader_list after random_ID in reverse (Highest first)
+		#Then take vessel_id in first tuple and set leader
+		print(self.leader_list)
+		self.leader = sorted(self.leader_list.items(), key=lambda tuple: tuple[1], reverse = True)[0][0]
+#------------------------------------------------------------------------------------------------------
 #------------------------------------------------------------------------------------------------------
 # This class implements the logic when a server receives a GET or POST
 # It can access to the server data through self.server.*
@@ -259,6 +304,8 @@ class BlackboardRequestHandler(BaseHTTPRequestHandler):
 			self.do_POST_entries(path[1])
 		elif path[0] == 'propagate':
 			self.do_POST_propagate()
+		elif path[0] == 'election':
+			self.do_POST_election()
 #------------------------------------------------------------------------------------------------------
 	def do_POST_board(self):
 		'''
@@ -366,6 +413,16 @@ class BlackboardRequestHandler(BaseHTTPRequestHandler):
 		thread.daemon = True
 		# We start the thread
 		thread.start()
+#------------------------------------------------------------------------------------------------------
+	def do_POST_election(self):
+		post_data = self.parse_POST_request()
+		action = post_data['action'][0]
+		if action == 'election':
+			value = post_data['value'][0]
+			self.server.leader_election(value)
+			self.send_response(200)
+		else:
+			self.send_error(400, 'Invalid Action')
 #------------------------------------------------------------------------------------------------------
 # Execute the code
 if __name__ == '__main__':
