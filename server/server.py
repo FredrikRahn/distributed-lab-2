@@ -177,20 +177,18 @@ class BlackboardServer(HTTPServer):
 			print("leader is: ", self.leader)
 		else:
 			print("recieved leader election message")
-			print("Vessel id = ", self.vessel_id)
 			#Populate local leader_list with the nodes random_ID
 			leader_list[self.vessel_id] = self.random_ID
 			#Find next index in vessels
-			print("Self.vessels = ", self.vessels)
 			nextid = (self.vessel_id + 1) % (len(self.vessels) + 1)
 			#Check whether nextid point to 0 (non-existant), set 1 if so
 			if nextid == 0:
 				nextid = 1;
 			next_index = self.vessels.index('10.1.0.%d' % nextid)
-			print("Next_index = ",  next_index)
 			next = self.vessels[next_index]
-			print("Next = ",  next)
 			#Send leader_list to next
+			print("Vessel id = ", self.vessel_id)
+			print('Updated recieved leader_list = ', leader_list)
 			path = '/election'
 			self.contact_vessel(vessel_ip=next, path=path, action='election', key=None, value=leader_list)
 
@@ -433,7 +431,6 @@ class BlackboardRequestHandler(BaseHTTPRequestHandler):
 		action = post_data['action'][0]
 		if action == 'election':
 			value = post_data['value'][0]
-			print("value is = ", value)
 			self.server.leader_election(value)
 			self.send_response(200)
 		else:
