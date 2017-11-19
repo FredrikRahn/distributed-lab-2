@@ -57,10 +57,6 @@ class BlackboardServer(HTTPServer):
 		#init leader
 		self.leader = None
 
-		#start leader leader_election
-		time.sleep(10)
-		self.leader_election(self.leader_list)
-
 #------------------------------------------------------------------------------------------------------
 	# We add a value received to the store
 	def add_value_to_store(self, value):
@@ -164,6 +160,8 @@ class BlackboardServer(HTTPServer):
 				self.contact_vessel(vessel, path, action, key, value)
 #------------------------------------------------------------------------------------------------------
 	def leader_election(self, leader_list):
+		#Sleep before starting election (to wait for server to start)
+		time.sleep(10)
 		#Check whether node exists in list to check if we're done propagating
 		if self.vessel_id in leader_list:
 			print("leader list ", leader_list)
@@ -197,6 +195,13 @@ class BlackboardServer(HTTPServer):
 		print(self.leader_list)
 		self.leader = sorted(self.leader_list.items(), key=lambda tuple: tuple[1], reverse = True)[0][0]
 #------------------------------------------------------------------------------------------------------
+	def init_leader_election(self):
+		thread = Thread(target=self.leader_election, args=({})
+		print('Created thread for leader election')
+		# We kill the process if we kill the server
+		thread.daemon = True
+		# We start the thread
+		thread.start()
 #------------------------------------------------------------------------------------------------------
 # This class implements the logic when a server receives a GET or POST
 # It can access to the server data through self.server.*
@@ -449,6 +454,7 @@ if __name__ == '__main__':
 	server = BlackboardServer(('', PORT_NUMBER), BlackboardRequestHandler, vessel_id, vessel_list)
 	print("Starting the server on port %d" % PORT_NUMBER)
 
+	thread.start_new_thread(time.sleep(5), server.leader_election(server.leader_list))
 	try:
 		server.serve_forever()
 	except KeyboardInterrupt:
