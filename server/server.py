@@ -370,12 +370,16 @@ class BlackboardRequestHandler(BaseHTTPRequestHandler):
 		#We only arrive here if we are the leader
 		#Do action
 		post_data = self.parse_POST_request()
-		action = post_data['action'][0]
-		key = post_data['key'][0]
-		value = post_data['value'][0]
-		self.do_leader_action(action=action, key=key, value=value)
-		#Then propagate to all other nodes
-		self.propagate_action(action=action, key=key, value=value)
+		if 'action' in post_data:
+			action = post_data['action'][0]
+			key = post_data['key'][0]
+			value = post_data['value'][0]
+			self.do_leader_action(action=action, key=key, value=value)
+			#Then propagate to all other nodes
+			self.propagate_action(action=action, key=key, value=value)
+			self.send_response(200)
+		else:
+			self.send_error(400, 'Invalid action for leader')
 #------------------------------------------------------------------------------------------------------
 	def do_POST_add_entry(self, value):
 		'''
