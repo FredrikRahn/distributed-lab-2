@@ -417,10 +417,16 @@ class BlackboardRequestHandler(BaseHTTPRequestHandler):
 		#Recieves dict, propagate action to local store
 		print('Propagating action to local store')
 		self.do_POST_propagate()
-		#propagate to all vessels
+
+		#Parse post data
+		print('Post_data in do_POST_leader',post_data)
+		post_data = self.parse_POST_request()
 		action = post_data['action'][0]
 		key = post_data['key'][0]
 		value = post_data['value'][0]
+		print('action,key,value ', action,key,value)
+
+		#propagate to all vessels
 		print('Propagate action to all vessels ', action,key,value)
 		self.propagate_action(action=action, key=key, value=value)
 #------------------------------------------------------------------------------------------------------
@@ -443,7 +449,7 @@ class BlackboardRequestHandler(BaseHTTPRequestHandler):
 #------------------------------------------------------------------------------------------------------
 	def propagate_action_to_leader(self, action, key='', value=''):
 		leader_ip = '10.1.0.%d' % self.server.leader
-		
+
 		propagate_path = '/leader'
 		#propagate_path = self.path
 
