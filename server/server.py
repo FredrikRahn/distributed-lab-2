@@ -324,13 +324,16 @@ class BlackboardRequestHandler(BaseHTTPRequestHandler):
 		Add entries to board
 		'''
 		#TODO: CLEAN THIS 'insert-branne-pk-message' ****
+		#TODO: Fix dict returned to leader
 		post_data = self.parse_POST_request()
 		print('Post_data = ', post_data)
-		if 'entry' in post_data and self.server.leader == self.server.vessel_id:
+		if self.server.leader == self.server.vessel_id:
 			#This node is leader, propagate to everyone
-			value = post_data['entry'][0]
-			entry = self.do_POST_add_entry(value)
-			self.propagate_action(action='add', key=entry[0], value=entry[1])
+			#Leader recieves dictionary
+			action = post_data['action'][0]
+			key = post_data['key'][0]
+			value = post_data['value'][0]
+			self.propagate_action(action=action, key=key, value=value)
 		elif 'entry' in post_data:
 			#This node is NOT leader, propagate to leader
 			value = post_data['entry'][0]
