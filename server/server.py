@@ -325,6 +325,7 @@ class BlackboardRequestHandler(BaseHTTPRequestHandler):
 		'''
 		#TODO: CLEAN THIS 'insert-branne-pk-message' ****
 		post_data = self.parse_POST_request()
+		print(post_data)
 		if 'entry' in post_data and self.server.leader == self.server.vessel_id:
 			#This node is leader, propagate to everyone
 			value = post_data['entry'][0]
@@ -346,6 +347,7 @@ class BlackboardRequestHandler(BaseHTTPRequestHandler):
 		'''
 		#TODO: CLEAN THIS 'insert-branne-pk-message' ****
 		post_data = self.parse_POST_request()
+		#if self.server.leader == self.server.vessel_id:
 		if 'delete' in post_data and self.server.leader == self.server.vessel_id:
 			#Node is leader, propagate to everyone
 			delete = post_data['delete'][0]
