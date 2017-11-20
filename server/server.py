@@ -366,26 +366,16 @@ class BlackboardRequestHandler(BaseHTTPRequestHandler):
 			else:
 				self.send_error(400, 'Invalid action')
 #------------------------------------------------------------------------------------------------------
-	def do_POST_propagate_from_leader(self):
-		'''
-		Handles propagation of actions by
-		routing them to the correct functions
-		'''
-		print('Propagate_from_leader')
+	def do_POST_leader(self):
+		#We only arrive here if we are the leader
+		#Do action
 		post_data = self.parse_POST_request()
-		if self.server.leader == self.server.vessel_id:
-			print('do we arrive?')
-			#Make the leader add to local store before propagating to vessels
-			self.do_POST_propagate()
-		if 'action' in post_data:
-			action = post_data['action'][0]
-			value = post_data['value'][0]
-			key = post_data['key'][0]
-			#Local store has been manipulated, now propagate to all vessels
-			print('Local store has been modified, now propagate_action (from leader) (action,key,value) ', action,key,value)
-			self.propagate_action(action=action, key=key, value=value)
-		else:
-			self.send_error(400, 'Invalid post_data in propagate_from_leader')
+		action = post_data['action'][0]
+		key = post_data['key'][0]
+		value = post_data['value'][0]
+		self.do_leader_action(action=action, key=key, value=value)
+		#Then propagate to all other nodes
+		self.propagate_action(action=action, key=key, value=value)
 #------------------------------------------------------------------------------------------------------
 	def do_POST_add_entry(self, value):
 		'''
@@ -428,15 +418,6 @@ class BlackboardRequestHandler(BaseHTTPRequestHandler):
 		else:
 			 self.send_error(400, 'Entry not deleted')
 #------------------------------------------------------------------------------------------------------
-	def do_POST_leader(self):
-		#Recieves dict, propagate action to local store
-		print('Propagating action to local store')
-		self.do_POST_propagate_from_leader()
-
-		#propagate to all vessels
-		#print('Propagate action to all vessels ', action,key,value)
-		#self.propagate_action(action=action, key=key, value=value)
-#------------------------------------------------------------------------------------------------------
 	def do_POST_election(self):
 		post_data = self.parse_POST_request()
 		action = post_data['action'][0]
@@ -462,8 +443,6 @@ class BlackboardRequestHandler(BaseHTTPRequestHandler):
 		propagate_path = '/propagate'
 		print('path, action, key, value', propagate_path, action, key, value)
 		thread = Thread(target=self.server.propagate_value_to_vessels, args=(propagate_path, action, key, value))
-		print('tried to propagate')
-
 		# We kill the process if we kill the serverx
 		thread.daemon = True
 		# We start the thread
