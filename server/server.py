@@ -450,7 +450,7 @@ class BlackboardRequestHandler(BaseHTTPRequestHandler):
 	def propagate_action_to_leader(self, action, key='', value=''):
 		leader_ip = '10.1.0.%d' % self.server.leader
 
-		print('Propagating to leader: %s' % leader_ip, ', with path: %s' % self.path)
+		print('Propagating to leader: %s' % leader_ip, ', with path: %s' % self.path, ', action = %s' % action, ', key = %s' % key, ', value = %s' % value)
 		thread = Thread(target=self.server.contact_vessel, args=(leader_ip, self.path, action, key, value))
 		# We kill the process if we kill the serverx
 		thread.daemon = True
