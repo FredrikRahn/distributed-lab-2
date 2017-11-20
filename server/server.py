@@ -328,6 +328,7 @@ class BlackboardRequestHandler(BaseHTTPRequestHandler):
 		if 'entry' in post_data:
 			value = post_data['entry'][0]
 			self.propagate_action_to_leader(action='add', value=value)
+			self.send_response(200)
 		else:
 			self.send_error(400, 'Error adding entry to board')
 #------------------------------------------------------------------------------------------------------
@@ -341,9 +342,11 @@ class BlackboardRequestHandler(BaseHTTPRequestHandler):
 			delete = post_data['delete'][0]
 			if delete == '1':
 				self.propagate_action_to_leader(action='delete', key=int(entryID))
+				self.send_response(200)
 			else:
 				modified_value = post_data['entry'][0]
 				self.propagate_action_to_leader(action='modify', key=int(entryID), value=modified_value)
+				self.send_response(200)
 		else:
 			self.send_error(400, 'Delete flag missing from request')
 #------------------------------------------------------------------------------------------------------
@@ -374,6 +377,7 @@ class BlackboardRequestHandler(BaseHTTPRequestHandler):
 			action = post_data['action'][0]
 			key = post_data['key'][0]
 			value = post_data['value'][0]
+			print('Doing leader_action then propagating (action,key,value) ', action,key,value)
 			self.do_leader_action(action=action, key=key, value=value)
 			#Then propagate to all other nodes
 			self.propagate_action(action=action, key=key, value=value)
