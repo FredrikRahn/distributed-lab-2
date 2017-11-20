@@ -326,9 +326,9 @@ class BlackboardRequestHandler(BaseHTTPRequestHandler):
 		#TODO: CLEAN THIS 'insert-branne-pk-message' ****
 		post_data = self.parse_POST_request()
 		print('Post_data = ', post_data)
-		if ['entry'] in post_data and self.server.leader == self.server.vessel_id:
+		if 'entry' in post_data and self.server.leader == self.server.vessel_id:
 			#This node is leader, propagate to everyone
-			value = post_data['entry'][0][0]
+			value = post_data['entry'][0]
 			entry = self.do_POST_add_entry(value)
 			self.propagate_action(action='add', key=entry[0], value=entry[1])
 		elif 'entry' in post_data:
