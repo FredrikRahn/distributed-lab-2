@@ -57,7 +57,6 @@ class BlackboardServer(HTTPServer):
 		self.leader_list = {'creator': vessel_id}
 		#init leader
 		self.leader = None
-
 		#init leader election
 		self.init_leader_election(self.leader_list)
 #------------------------------------------------------------------------------------------------------
@@ -190,7 +189,6 @@ class BlackboardServer(HTTPServer):
 			#print("Vessel id = ", self.vessel_id)
 			#print('Updated recieved leader_list = ', leader_list)
 			path = '/election'
-			#TODO: Make func to only contact vessels that got time out after one iteration
 			self.contact_vessel(vessel_ip=next, path=path, action='election', key=None, value=leader_list)
 
 #------------------------------------------------------------------------------------------------------
@@ -324,11 +322,18 @@ class BlackboardRequestHandler(BaseHTTPRequestHandler):
 		'''
 		Add entries to board
 		'''
+		#TODO: CLEAN THIS 'insert-branne-pk-message' ****
 		post_data = self.parse_POST_request()
-		if 'entry' in post_data:
+		if 'entry' in post_data and self.server.leader == self.server.vessel_id:
+			#This node is leader, propagate to everyone
 			value = post_data['entry'][0]
 			entry = self.do_POST_add_entry(value)
 			self.propagate_action(action='add', key=entry[0], value=entry[1])
+		elif 'entry' in post_data:
+			#This node is NOT leader, propagate to leader
+			value = post_data['entry'][0]
+			entry = self.do_POST_add_entry(value)
+			self.propagate_action_to_leader(action='add', key=entry[0], value=entry[1])
 		else:
 			self.send_error(400, 'Error adding entry to board')
 #------------------------------------------------------------------------------------------------------
@@ -337,8 +342,10 @@ class BlackboardRequestHandler(BaseHTTPRequestHandler):
 		Handles deleting and modifying entries to the board
 		@args: entryID:String, ID of entry to be modified/deleted
 		'''
+		#TODO: CLEAN THIS 'insert-branne-pk-message' ****
 		post_data = self.parse_POST_request()
-		if 'delete' in post_data:
+		if 'delete' in post_data and self.server.leader == self.server.vessel_id:
+			#Node is leader, propagate to everyone
 			delete = post_data['delete'][0]
 			if delete == '1':
 				entry = self.do_POST_delete_entry(int(entryID))
@@ -347,6 +354,17 @@ class BlackboardRequestHandler(BaseHTTPRequestHandler):
 				modified_value = post_data['entry'][0]
 				entry = self.do_POST_modify_entry(int(entryID), modified_value)
 				self.propagate_action(action='modify', key=entry[0], value=entry[1])
+
+		elif 'delete' in post_data:
+			#Node is NOT leader, propagate to leader
+			delete = post_data['delete'][0]
+			if delete == '1':
+				entry = self.do_POST_delete_entry(int(entryID))
+				self.propagate_action_to_leader(action='delete', key=entry[0])
+			else:
+				modified_value = post_data['entry'][0]
+				entry = self.do_POST_modify_entry(int(entryID), modified_value)
+				self.propagate_action_to_leader(action='modify', key=entry[0], value=entry[1])
 		else:
 			self.send_error(400, 'Delete flag missing from request')
 #------------------------------------------------------------------------------------------------------
@@ -427,6 +445,16 @@ class BlackboardRequestHandler(BaseHTTPRequestHandler):
 		# We start the thread
 		thread.start()
 #------------------------------------------------------------------------------------------------------
+	def propagate_action_to_leader(self, action, key='', value=''):
+		leader_ip = '10.1.0.%d' % self.server.leader
+
+		print('Propagating to leader: %s' % leader_ip, ', with path: %s' % self.path)
+		thread = Thread(target=self.server.contact_vessel, args=(leader_ip, self.path, action, key, value))
+		# We kill the process if we kill the serverx
+		thread.daemon = True
+		# We start the thread
+		thread.start()
+#------------------------------------------------------------------------------------------------------
 	def do_POST_election(self):
 		post_data = self.parse_POST_request()
 		action = post_data['action'][0]
@@ -440,7 +468,7 @@ class BlackboardRequestHandler(BaseHTTPRequestHandler):
 			thread.start()
 			self.send_response(200)
 		else:
-			self.send_error(400, 'Invalid Action')
+			self.send_error(400, 'Invalid Election Action')
 #------------------------------------------------------------------------------------------------------
 # Execute the code
 if __name__ == '__main__':
