@@ -372,6 +372,28 @@ class BlackboardRequestHandler(BaseHTTPRequestHandler):
 			else:
 				self.send_error(400, 'Invalid action')
 #------------------------------------------------------------------------------------------------------
+	def do_POST_propagate_from_leader(self):
+		'''
+		Handles propagation of actions by
+		routing them to the correct functions
+		'''
+		post_data = self.parse_POST_request()
+		if 'action' in post_data:
+			action = post_data['action'][0]
+			value = post_data['value'][0]
+			key = post_data['key'][0]
+			if action == 'add':
+				self.do_POST_add_entry(value)
+			elif action == 'modify':
+				self.do_POST_modify_entry(key, value)
+			elif action == 'delete':
+				self.do_POST_delete_entry(key)
+			else:
+				self.send_error(400, 'Invalid action')
+			#Local store has been manipulated, now propagate to all vessels
+			print('Local store has been modified, now propagate_action (action,key,value) ', action,key,value)
+			self.propagate_action(action=action, key=key, value=value)
+#------------------------------------------------------------------------------------------------------
 	def do_POST_add_entry(self, value):
 		'''
 		Adds a new entry to store
@@ -418,9 +440,6 @@ class BlackboardRequestHandler(BaseHTTPRequestHandler):
 		print('Propagating action to local store')
 		self.do_POST_propagate()
 
-		#Parse post data
-		post_data = self.parse_POST_request()
-		print('Post_data in do_POST_leader',post_data)
 
 
 		#propagate to all vessels
