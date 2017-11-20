@@ -317,7 +317,7 @@ class BlackboardRequestHandler(BaseHTTPRequestHandler):
 			self.do_POST_propagate()
 		elif path[0] == 'election':
 			self.do_POST_election()
-		elif path[0] == 'leader'
+		elif path[0] == 'leader':
 			self.do_POST_leader()
 #------------------------------------------------------------------------------------------------------
 	def do_POST_board(self):
