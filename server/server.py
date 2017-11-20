@@ -438,9 +438,7 @@ class BlackboardRequestHandler(BaseHTTPRequestHandler):
 	def do_POST_leader(self):
 		#Recieves dict, propagate action to local store
 		print('Propagating action to local store')
-		self.do_POST_propagate()
-
-
+		self.do_POST_propagate_from_leader()
 
 		#propagate to all vessels
 		#print('Propagate action to all vessels ', action,key,value)
