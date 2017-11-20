@@ -419,11 +419,12 @@ class BlackboardRequestHandler(BaseHTTPRequestHandler):
 		self.do_POST_propagate()
 
 		#Parse post data
-		print('Post_data in do_POST_leader',post_data)
+
 		post_data = self.parse_POST_request()
 		action = post_data['action'][0]
 		key = post_data['key'][0]
 		value = post_data['value'][0]
+		print('Post_data in do_POST_leader',post_data)
 		print('action,key,value ', action,key,value)
 
 		#propagate to all vessels
