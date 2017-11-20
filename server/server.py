@@ -328,14 +328,13 @@ class BlackboardRequestHandler(BaseHTTPRequestHandler):
 		print('Entry of dreams = ' , entry)
 		if entry and self.server.leader == self.server.vessel_id:
 			#This node is leader, propagate to everyone
-			value = post_data['entry'][0]
-			entry = self.do_POST_add_entry(value)
-			self.propagate_action(action='add', key=entry[0], value=entry[1])
+			entry = self.do_POST_add_entry(entry)
+			self.propagate_action(action='add', value=entry)
 		elif entry:
 			#This node is NOT leader, propagate to leader
 			value = post_data['entry'][0]
 			entry = self.do_POST_add_entry(value)
-			self.propagate_action_to_leader(action='add', key=entry[0], value=entry[1])
+			self.propagate_action_to_leader(action='add', value=entry)
 		else:
 			print('post_data = :', post_data)
 			self.send_error(400, 'Error adding entry to board')
