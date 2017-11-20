@@ -260,7 +260,6 @@ class BlackboardRequestHandler(BaseHTTPRequestHandler):
 		Fetches the Index page and all contents to be displayed
 		@return: Entire page:html
 		'''
-		#TODO: ADD LEADER FIELD
 		# We set the response status code to 200 (OK)
 		self.set_HTTP_headers(200)
 
@@ -318,29 +317,21 @@ class BlackboardRequestHandler(BaseHTTPRequestHandler):
 			self.do_POST_propagate()
 		elif path[0] == 'election':
 			self.do_POST_election()
+		elif path[0] == 'leader'
+			self.do_POST_leader()
 #------------------------------------------------------------------------------------------------------
 	def do_POST_board(self):
 		'''
 		Add entries to board
 		'''
-		#TODO: CLEAN THIS 'insert-branne-pk-message' ****
-		#TODO: Fix dict returned to leader
+		#TODO: Make POST_board propagate to leader
 		post_data = self.parse_POST_request()
-		print('Post_data = ', post_data)
-		if self.server.leader == self.server.vessel_id:
+		if 'entry' in post_data:
 			#This node is leader, propagate to everyone
-			#Leader recieves dictionary
-			action = post_data['action'][0]
-			key = post_data['key'][0]
-			value = post_data['value'][0]
-			self.propagate_action(action=action, key=key, value=value)
-		elif 'entry' in post_data:
-			#This node is NOT leader, propagate to leader
 			value = post_data['entry'][0]
 			entry = self.do_POST_add_entry(value)
 			self.propagate_action_to_leader(action='add', key=entry[0], value=entry[1])
 		else:
-			print('post_data = :', post_data)
 			self.send_error(400, 'Error adding entry to board')
 #------------------------------------------------------------------------------------------------------
 	def do_POST_entries(self, entryID):
@@ -348,22 +339,9 @@ class BlackboardRequestHandler(BaseHTTPRequestHandler):
 		Handles deleting and modifying entries to the board
 		@args: entryID:String, ID of entry to be modified/deleted
 		'''
-		#TODO: CLEAN THIS 'insert-branne-pk-message' ****
+		#TODO: Make POST_entries propagate to leader
 		post_data = self.parse_POST_request()
-		#if self.server.leader == self.server.vessel_id:
-		if 'delete' in post_data and self.server.leader == self.server.vessel_id:
-			#Node is leader, propagate to everyone
-			delete = post_data['delete'][0]
-			if delete == '1':
-				entry = self.do_POST_delete_entry(int(entryID))
-				self.propagate_action(action='delete', key=entry[0])
-			else:
-				modified_value = post_data['entry'][0]
-				entry = self.do_POST_modify_entry(int(entryID), modified_value)
-				self.propagate_action(action='modify', key=entry[0], value=entry[1])
-
-		elif 'delete' in post_data:
-			#Node is NOT leader, propagate to leader
+		if 'delete' in post_data:
 			delete = post_data['delete'][0]
 			if delete == '1':
 				entry = self.do_POST_delete_entry(int(entryID))
@@ -435,6 +413,17 @@ class BlackboardRequestHandler(BaseHTTPRequestHandler):
 		else:
 			 self.send_error(400, 'Entry not deleted')
 #------------------------------------------------------------------------------------------------------
+	def do_POST_leader(self):
+		#Recieves dict, propagate action to local store
+		print('Propagating action to local store')
+		self.do_POST_propagate()
+		#propagate to all vessels
+		action = post_data['action'][0]
+		key = post_data['key'][0]
+		value = post_data['value'][0]
+		print('Propagate action to all vessels ', action,key,value)
+		self.propagate_action(action=action, key=key, value=value)
+#------------------------------------------------------------------------------------------------------
 	def propagate_action(self, action, key='', value=''):
 		'''
 		Spawns a thread and propagates an action to other vessels
@@ -455,8 +444,16 @@ class BlackboardRequestHandler(BaseHTTPRequestHandler):
 	def propagate_action_to_leader(self, action, key='', value=''):
 		leader_ip = '10.1.0.%d' % self.server.leader
 
-		print('Propagating to leader: %s' % leader_ip, ', with path: %s' % self.path, ', action = %s' % action, ', key = %s' % key, ', value = %s' % value)
-		thread = Thread(target=self.server.contact_vessel, args=(leader_ip, self.path, action, key, value))
+		post_data = self.parse_POST_request()
+		action = post_data['action'][0]
+		key = post_data['key'][0]
+		value = post_data['value'][0]
+
+		propagate_path = '/leader'
+		#propagate_path = self.path
+
+		print('Propagating to leader: %s' % leader_ip, ', with path: %s' % propagate_path, ', action = %s' % action, ', key = %s' % key, ', value = %s' % value)
+		thread = Thread(target=self.server.contact_vessel, args=(leader_ip, propagate_path, action, key, value))
 		# We kill the process if we kill the serverx
 		thread.daemon = True
 		# We start the thread
