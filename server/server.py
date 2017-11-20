@@ -378,6 +378,9 @@ class BlackboardRequestHandler(BaseHTTPRequestHandler):
 		routing them to the correct functions
 		'''
 		post_data = self.parse_POST_request()
+		if self.server.leader == self.server.vessel_id:
+			#Make the leader add to local store before propagating to vessels
+			self.do_POST_propagate
 		if 'action' in post_data:
 			action = post_data['action'][0]
 			value = post_data['value'][0]
