@@ -443,11 +443,12 @@ class BlackboardRequestHandler(BaseHTTPRequestHandler):
 #------------------------------------------------------------------------------------------------------
 	def propagate_action_to_leader(self, action, key='', value=''):
 		leader_ip = '10.1.0.%d' % self.server.leader
-
+		print('BEFORE action,key,value ', action,key,value)
 		post_data = self.parse_POST_request()
 		action = post_data['action'][0]
 		key = post_data['key'][0]
 		value = post_data['value'][0]
+		print('AFTER action,key,value ', action,key,value)
 
 		propagate_path = '/leader'
 		#propagate_path = self.path
