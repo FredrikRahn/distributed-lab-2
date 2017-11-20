@@ -260,6 +260,7 @@ class BlackboardRequestHandler(BaseHTTPRequestHandler):
 		Fetches the Index page and all contents to be displayed
 		@return: Entire page:html
 		'''
+		#TODO: ADD LEADER FIELD
 		# We set the response status code to 200 (OK)
 		self.set_HTTP_headers(200)
 
@@ -335,6 +336,7 @@ class BlackboardRequestHandler(BaseHTTPRequestHandler):
 			entry = self.do_POST_add_entry(value)
 			self.propagate_action_to_leader(action='add', key=entry[0], value=entry[1])
 		else:
+			print(post_data)
 			self.send_error(400, 'Error adding entry to board')
 #------------------------------------------------------------------------------------------------------
 	def do_POST_entries(self, entryID):
