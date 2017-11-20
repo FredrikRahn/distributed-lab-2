@@ -329,6 +329,7 @@ class BlackboardRequestHandler(BaseHTTPRequestHandler):
 		if 'entry' in post_data:
 			#This node is leader, propagate to everyone
 			value = post_data['entry'][0]
+			print('value in do_POST_board = ', value)
 			entry = self.do_POST_add_entry(value)
 			self.propagate_action_to_leader(action='add', key=entry[0], value=entry[1])
 		else:
