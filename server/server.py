@@ -325,7 +325,9 @@ class BlackboardRequestHandler(BaseHTTPRequestHandler):
 		'''
 		#TODO: CLEAN THIS 'insert-branne-pk-message' ****
 		post_data = self.parse_POST_request()
-		print(post_data)
+		if self.server.leader == self.server.vessel_id:
+			#PARSE THIS SHIT AGAIN SINCE STUFF IS FUCKED
+			post_data = self.parse_POST_request()
 		if 'entry' in post_data and self.server.leader == self.server.vessel_id:
 			#This node is leader, propagate to everyone
 			value = post_data['entry'][0]
@@ -337,7 +339,7 @@ class BlackboardRequestHandler(BaseHTTPRequestHandler):
 			entry = self.do_POST_add_entry(value)
 			self.propagate_action_to_leader(action='add', key=entry[0], value=entry[1])
 		else:
-			print(post_data)
+			print('post_data = :', post_data)
 			self.send_error(400, 'Error adding entry to board')
 #------------------------------------------------------------------------------------------------------
 	def do_POST_entries(self, entryID):
