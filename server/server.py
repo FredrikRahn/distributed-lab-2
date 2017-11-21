@@ -162,8 +162,11 @@ class BlackboardServer(HTTPServer):
 				self.contact_vessel(vessel, path, action, key, value)
 #------------------------------------------------------------------------------------------------------
 	def leader_election(self, leader_list):
-		#Sleep before starting election (to wait for server to start)
-		#time.sleep(0)
+                '''
+                Either creates a leader election and sends it's leader_list to neighbour,
+                or updates a recieved leader election message and sends the leader_list to neighbour
+		@args: leader_list:Dict, Dict with the vessels and their random ID.
+                '''
 		#Convert leader_list to dict (from string)
 		if isinstance(leader_list, basestring):
 			leader_list = ast.literal_eval(leader_list)
@@ -193,12 +196,19 @@ class BlackboardServer(HTTPServer):
 
 #------------------------------------------------------------------------------------------------------
 	def set_leader(self):
-		#Sort leader_list after random_ID in reverse (Highest first)
-		#Then take vessel_id in first tuple and set leader
+                '''
+		Sort leader_list after random_ID in reverse (Highest first)
+		Then take vessel_id in first tuple and set leader
+		'''
 		print(self.leader_list)
 		self.leader = sorted(self.leader_list.items(), key=lambda tuple: tuple[1], reverse = True)[0][0]
 #------------------------------------------------------------------------------------------------------
 	def init_leader_election(self, leader_list):
+                '''
+		Initializes leader election, starts a thread that sleeps
+                for 2 seconds and then starts leader election.a
+		@args: leader_list:Dict, Dict with the vessels and their random ID.
+		'''
 		leader_election_thread = Timer(2, self.leader_election, [leader_list])
 		print('Created thread for leader election')
 		# We kill the process if we kill the server
@@ -370,6 +380,10 @@ class BlackboardRequestHandler(BaseHTTPRequestHandler):
 				self.send_error(400, 'Invalid action')
 #------------------------------------------------------------------------------------------------------
 	def do_POST_leader(self):
+                '''
+	        Parses post data, completes the action locally 
+                and then propagates the action to other vessels.
+		'''
 		#We only arrive here if we are the leader
 		#Do action
 		post_data = self.parse_POST_request()
@@ -412,7 +426,7 @@ class BlackboardRequestHandler(BaseHTTPRequestHandler):
 			return entry
 		else:
 			 self.send_error(400, 'Entry not modified')
-#------------------------------------------------------------------------------------------------------
+p#------------------------------------------------------------------------------------------------------
 	def do_POST_delete_entry(self, entryID):
 		'''
 		Deletes an entry in store
@@ -427,13 +441,16 @@ class BlackboardRequestHandler(BaseHTTPRequestHandler):
 			 self.send_error(400, 'Entry not deleted')
 #------------------------------------------------------------------------------------------------------
 	def do_POST_election(self):
+                '''
+		Parses the post data, then spawns a thread for leader election
+		'''
 		post_data = self.parse_POST_request()
 		action = post_data['action'][0]
 		if action == 'election':
 			value = post_data['value'][0]
 			thread = Thread(target=self.server.leader_election, args=(value,))
 			print('Created leader_election thread from POST req')
-			# We kill the process if we kill the serverx
+			# We kill the process if we kill the server
 			thread.daemon = True
 			# We start the thread
 			thread.start()
@@ -457,15 +474,20 @@ class BlackboardRequestHandler(BaseHTTPRequestHandler):
 		thread.start()
 #------------------------------------------------------------------------------------------------------
 	def propagate_action_to_leader(self, action, key='', value=''):
+                '''
+	        Spawns a thread that propagates an action to the leader vessel
+		@args: action:String
+		@args: key:String
+		@args: value:String
+		'''
 		leader_ip = '10.1.0.%d' % self.server.leader
 
 		propagate_path = '/leader'
 		#propagate_path = self.path
 		if self.server.leader != self.server.vessel_id:
 			#Contact leader only if this node is not leader
-			print('Propagating to leader: %s' % leader_ip, ', with path: %s' % propagate_path, ', action = %s' % action, ', key = %s' % key, ', value = %s' % value)
 			thread = Thread(target=self.server.contact_vessel, args=(leader_ip, propagate_path, action, key, value))
-			# We kill the process if we kill the serverx
+			# We kill the process if we kill the server
 			thread.daemon = True
 			# We start the thread
 			thread.start()
@@ -477,6 +499,12 @@ class BlackboardRequestHandler(BaseHTTPRequestHandler):
 			self.propagate_action(action=action, key=key, value=value)
 #------------------------------------------------------------------------------------------------------
 	def do_leader_action(self, action, key, value):
+                '''
+		Specific function for leader to do action locally.
+		@args: action:String
+		@args: key:String
+		@args: value:String
+		'''
 		if action == 'add':
 			self.do_POST_add_entry(value)
 		elif action == 'modify':
