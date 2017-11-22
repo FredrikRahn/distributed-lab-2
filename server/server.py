@@ -293,7 +293,7 @@ class BlackboardRequestHandler(BaseHTTPRequestHandler):
 		fetch_index_entries = ""
 		for entryId, entryValue in self.server.store.items():
 			fetch_index_entries += entry_template % ("entries/" + str(entryId), entryId, entryValue)
-		boardcontents = boardcontents_template % ("Title, leader is = " + self.server.leader, fetch_index_entries)
+		boardcontents = boardcontents_template % ("Title", fetch_index_entries)
 		return boardcontents
 #------------------------------------------------------------------------------------------------------
 	def do_GET_board(self):
