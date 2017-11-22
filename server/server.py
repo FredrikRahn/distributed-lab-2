@@ -381,7 +381,7 @@ class BlackboardRequestHandler(BaseHTTPRequestHandler):
 #------------------------------------------------------------------------------------------------------
 	def do_POST_leader(self):
                 '''
-	        Parses post data, completes the action locally 
+	        Parses post data, completes the action locally
                 and then propagates the action to other vessels.
 		'''
 		#We only arrive here if we are the leader
@@ -426,7 +426,7 @@ class BlackboardRequestHandler(BaseHTTPRequestHandler):
 			return entry
 		else:
 			 self.send_error(400, 'Entry not modified')
-p#------------------------------------------------------------------------------------------------------
+#------------------------------------------------------------------------------------------------------
 	def do_POST_delete_entry(self, entryID):
 		'''
 		Deletes an entry in store
