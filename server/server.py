@@ -162,11 +162,11 @@ class BlackboardServer(HTTPServer):
 				self.contact_vessel(vessel, path, action, key, value)
 #------------------------------------------------------------------------------------------------------
 	def leader_election(self, leader_list):
-                '''
-                Either creates a leader election and sends it's leader_list to neighbour,
-                or updates a recieved leader election message and sends the leader_list to neighbour
+		'''
+        Either creates a leader election and sends it's leader_list to neighbour,
+        or updates a recieved leader election message and sends the leader_list to neighbour
 		@args: leader_list:Dict, Dict with the vessels and their random ID.
-                '''
+		'''
 		#Convert leader_list to dict (from string)
 		if isinstance(leader_list, basestring):
 			leader_list = ast.literal_eval(leader_list)
@@ -193,20 +193,25 @@ class BlackboardServer(HTTPServer):
 			#print('Updated recieved leader_list = ', leader_list)
 			path = '/election'
 			self.contact_vessel(vessel_ip=next, path=path, action='election', key=None, value=leader_list)
-
 #------------------------------------------------------------------------------------------------------
 	def set_leader(self):
-                '''
+		'''
 		Sort leader_list after random_ID in reverse (Highest first)
 		Then take vessel_id in first tuple and set leader
 		'''
 		print(self.leader_list)
 		self.leader = sorted(self.leader_list.items(), key=lambda tuple: tuple[1], reverse = True)[0][0]
+		self.display_leader()
+#------------------------------------------------------------------------------------------------------
+	def display_leader(self):
+		print (self.leader)
+		header = board_frontpage_header_template % self.leader
+		return header
 #------------------------------------------------------------------------------------------------------
 	def init_leader_election(self, leader_list):
-                '''
+		'''
 		Initializes leader election, starts a thread that sleeps
-                for 2 seconds and then starts leader election.a
+        for 2 seconds and then starts leader election.a
 		@args: leader_list:Dict, Dict with the vessels and their random ID.
 		'''
 		leader_election_thread = Timer(2, self.leader_election, [leader_list])
@@ -273,7 +278,7 @@ class BlackboardRequestHandler(BaseHTTPRequestHandler):
 		# We set the response status code to 200 (OK)
 		self.set_HTTP_headers(200)
 
-		fetch_index_header = board_frontpage_header_template
+		fetch_index_header = self.server.display_leader()
 		fetch_index_contents = self.board_helper()
 		fetch_index_footer = board_frontpage_footer_template
 
@@ -288,7 +293,7 @@ class BlackboardRequestHandler(BaseHTTPRequestHandler):
 		'''
 		fetch_index_entries = ""
 		for entryId, entryValue in self.server.store.items():
-			fetch_index_entries += entry_template %("entries/" + str(entryId), entryId, entryValue)
+			fetch_index_entries += entry_template % ("entries/" + str(entryId), entryId, entryValue)
 		boardcontents = boardcontents_template % ("Title", fetch_index_entries)
 		return boardcontents
 #------------------------------------------------------------------------------------------------------
@@ -380,9 +385,9 @@ class BlackboardRequestHandler(BaseHTTPRequestHandler):
 				self.send_error(400, 'Invalid action')
 #------------------------------------------------------------------------------------------------------
 	def do_POST_leader(self):
-                '''
-	        Parses post data, completes the action locally
-                and then propagates the action to other vessels.
+		'''
+	    Parses post data, completes the action locally
+        and then propagates the action to other vessels.
 		'''
 		#We only arrive here if we are the leader
 		#Do action
@@ -414,7 +419,6 @@ class BlackboardRequestHandler(BaseHTTPRequestHandler):
 #------------------------------------------------------------------------------------------------------
 	def do_POST_modify_entry(self, entryID, value):
 		'''
-
 		Modifies a specific entry in store
 		@args: entryID:String, ID of entry to be modified
 		@args: value:String, new value to be assigned to entryID
@@ -441,7 +445,7 @@ class BlackboardRequestHandler(BaseHTTPRequestHandler):
 			 self.send_error(400, 'Entry not deleted')
 #------------------------------------------------------------------------------------------------------
 	def do_POST_election(self):
-                '''
+		'''
 		Parses the post data, then spawns a thread for leader election
 		'''
 		post_data = self.parse_POST_request()
@@ -474,8 +478,8 @@ class BlackboardRequestHandler(BaseHTTPRequestHandler):
 		thread.start()
 #------------------------------------------------------------------------------------------------------
 	def propagate_action_to_leader(self, action, key='', value=''):
-                '''
-	        Spawns a thread that propagates an action to the leader vessel
+		'''
+	    Spawns a thread that propagates an action to the leader vessel
 		@args: action:String
 		@args: key:String
 		@args: value:String
@@ -499,7 +503,7 @@ class BlackboardRequestHandler(BaseHTTPRequestHandler):
 			self.propagate_action(action=action, key=key, value=value)
 #------------------------------------------------------------------------------------------------------
 	def do_leader_action(self, action, key, value):
-                '''
+		'''
 		Specific function for leader to do action locally.
 		@args: action:String
 		@args: key:String
