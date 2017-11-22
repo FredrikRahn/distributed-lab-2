@@ -201,7 +201,6 @@ class BlackboardServer(HTTPServer):
 		'''
 		print(self.leader_list)
 		self.leader = sorted(self.leader_list.items(), key=lambda tuple: tuple[1], reverse = True)[0][0]
-		self.display_leader()
 #------------------------------------------------------------------------------------------------------
 	def display_leader(self):
 		print (self.leader)
