@@ -205,7 +205,7 @@ class BlackboardServer(HTTPServer):
 #------------------------------------------------------------------------------------------------------
 	def display_leader(self):
 		print (self.leader)
-		header = board_frontpage_header_template % self.leader
+		header = board_frontpage_header_template % (self.leader)
 		return header
 #------------------------------------------------------------------------------------------------------
 	def init_leader_election(self, leader_list):
@@ -278,7 +278,7 @@ class BlackboardRequestHandler(BaseHTTPRequestHandler):
 		# We set the response status code to 200 (OK)
 		self.set_HTTP_headers(200)
 
-		fetch_index_header = self.server.display_leader()
+		fetch_index_header = board_frontpage_header_template
 		fetch_index_contents = self.board_helper()
 		fetch_index_footer = board_frontpage_footer_template
 
@@ -294,7 +294,7 @@ class BlackboardRequestHandler(BaseHTTPRequestHandler):
 		fetch_index_entries = ""
 		for entryId, entryValue in self.server.store.items():
 			fetch_index_entries += entry_template % ("entries/" + str(entryId), entryId, entryValue)
-		boardcontents = boardcontents_template % ("Title", fetch_index_entries)
+		boardcontents = boardcontents_template % ("Title, leader is = " + self.server.leader, fetch_index_entries)
 		return boardcontents
 #------------------------------------------------------------------------------------------------------
 	def do_GET_board(self):
