@@ -23,6 +23,7 @@ import ast
 file_folder = os.path.dirname(os.path.realpath(__file__)) + '/'
 # Global variables for HTML templates
 board_frontpage_header_template = open(file_folder + 'board_frontpage_header_template.html', 'r').read()
+leader_template = open(file_folder + 'leader.html', 'r').read()
 boardcontents_template = open(file_folder + 'boardcontents_template.html', 'r').read()
 entry_template = open(file_folder + 'entry_template.html', 'r').read()
 board_frontpage_footer_template = open(file_folder + 'board_frontpage_footer_template.html', 'r').read()
@@ -57,6 +58,8 @@ class BlackboardServer(HTTPServer):
 		self.leader_list = {'creator': vessel_id}
 		#init leader
 		self.leader = None
+		#init leader id
+		self.leader_ID = None
 		#init leader election
 		self.init_leader_election(self.leader_list)
 #------------------------------------------------------------------------------------------------------
@@ -201,11 +204,12 @@ class BlackboardServer(HTTPServer):
 		'''
 		print(self.leader_list)
 		self.leader = sorted(self.leader_list.items(), key=lambda tuple: tuple[1], reverse = True)[0][0]
+		self.leader_ID = sorted(self.leader_list.items(), key=lambda tuple: tuple[1], reverse = True)[0][1]
 #------------------------------------------------------------------------------------------------------
 	def display_leader(self):
-		print (self.leader)
-		header = board_frontpage_header_template % (self.leader)
-		return header
+		string = str(self.leader) + ' with random ID: ' + str(self.leader_ID)
+		leader = leader_template % string
+		return leader
 #------------------------------------------------------------------------------------------------------
 	def init_leader_election(self, leader_list):
 		'''
@@ -277,11 +281,12 @@ class BlackboardRequestHandler(BaseHTTPRequestHandler):
 		# We set the response status code to 200 (OK)
 		self.set_HTTP_headers(200)
 
+		leader = self.server.display_leader()
 		fetch_index_header = board_frontpage_header_template
 		fetch_index_contents = self.board_helper()
 		fetch_index_footer = board_frontpage_footer_template
 
-		html_response = fetch_index_header + fetch_index_contents + fetch_index_footer
+		html_response = leader + fetch_index_header + fetch_index_contents + fetch_index_footer
 
 		self.wfile.write(html_response)
 #------------------------------------------------------------------------------------------------------
