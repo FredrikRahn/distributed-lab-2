@@ -89,6 +89,7 @@ class BlackboardServer(HTTPServer):
 		'''
 		# We add the value to the store
 		#TODO: uuid4
+		key = int(key)
 		if key not in self.store:
 			self.store[key]=value
 			return [key, value]
@@ -103,6 +104,7 @@ class BlackboardServer(HTTPServer):
 				Value:String, 	Value to be added to key
 		@return: [Key:Number, Value:String]
 		'''
+		key = int(key)
 		if key in self.store:
 			self.store[key] = value
 			return [key, value]
@@ -116,6 +118,7 @@ class BlackboardServer(HTTPServer):
 		@args:	Key:Number, Key to be deleted
 		@return: [Key:String]
 		'''
+		key = int(key)
 		if key in self.store:
 			del self.store[key]
 		return [key, None]
