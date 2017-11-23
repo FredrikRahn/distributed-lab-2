@@ -80,6 +80,21 @@ class BlackboardServer(HTTPServer):
 		else:
 			raise KeyError('Can not add key (Already Exists)')
 #------------------------------------------------------------------------------------------------------
+	# We add a value received to the store
+	def add_value_to_store_from_leader(self, key, value):
+		'''
+		Adds a new value to store
+		@args: Value:String, Value to be added to store
+		@return: [Key:String, Value:String]
+		'''
+		# We add the value to the store
+		#TODO: uuid4
+		if key not in self.store:
+			self.store[key]=value
+			return [key, value]
+		else:
+			raise KeyError('Can not add key (Already Exists)')
+#------------------------------------------------------------------------------------------------------
 	# We modify a value received in the store
 	def modify_value_in_store(self, key, value):
 		'''
@@ -384,11 +399,11 @@ class BlackboardRequestHandler(BaseHTTPRequestHandler):
 			value = post_data['value'][0]
 			key = post_data['key'][0]
 			if action == 'add':
-				self.do_POST_add_entry(value)
+				self.do_POST_add_entry_from_leader(key, value)
 			elif action == 'modify':
 				self.do_POST_modify_entry(key, value)
 			elif action == 'delete':
-				self.do_POST_delete_entry(key)
+				self.do_POST_delete_entry(key, value)
 			else:
 				self.send_error(400, 'Invalid action')
 #------------------------------------------------------------------------------------------------------
@@ -419,6 +434,19 @@ class BlackboardRequestHandler(BaseHTTPRequestHandler):
 		@return: entry:List, [key, value]
 		'''
 		entry = self.server.add_value_to_store(value=value)
+		if entry:
+			self.send_response(200)
+			return entry
+		else:
+			self.send_error(400, "Value was not added.")
+#------------------------------------------------------------------------------------------------------
+	def do_POST_add_entry_from_leader(self, key, value):
+		'''
+		Adds a new entry to store
+		@args: value:Value, Value to be added in store
+		@return: entry:List, [key, value]
+		'''
+		entry = self.server.add_value_to_store_from_leader(value=value)
 		if entry:
 			self.send_response(200)
 			return entry
