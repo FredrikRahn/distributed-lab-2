@@ -403,7 +403,7 @@ class BlackboardRequestHandler(BaseHTTPRequestHandler):
 			elif action == 'modify':
 				self.do_POST_modify_entry(key, value)
 			elif action == 'delete':
-				self.do_POST_delete_entry(key, value)
+				self.do_POST_delete_entry(key)
 			else:
 				self.send_error(400, 'Invalid action')
 #------------------------------------------------------------------------------------------------------
