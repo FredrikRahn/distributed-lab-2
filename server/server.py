@@ -207,6 +207,9 @@ class BlackboardServer(HTTPServer):
 		self.leader_ID = sorted(self.leader_list.items(), key=lambda tuple: tuple[1], reverse = True)[0][1]
 #------------------------------------------------------------------------------------------------------
 	def display_leader(self):
+		'''
+		Function used to insert the leader and its random ID into leader.html
+		'''
 		string = str(self.leader) + ' with random ID: ' + str(self.leader_ID)
 		leader = leader_template % string
 		return leader
@@ -499,12 +502,12 @@ class BlackboardRequestHandler(BaseHTTPRequestHandler):
 			thread.daemon = True
 			# We start the thread
 			thread.start()
-		else:
-			#This node is leader
-			#Do action locally
-			self.do_leader_action(action=action, key=key, value=value)
-			#Propagate_action (to all other nodes)
-			self.propagate_action(action=action, key=key, value=value)
+		# else:
+		# 	#This node is leader
+		# 	#Do action locally
+		# 	self.do_leader_action(action=action, key=key, value=value)
+		# 	#Propagate_action (to all other nodes)
+		# 	self.propagate_action(action=action, key=key, value=value)
 #------------------------------------------------------------------------------------------------------
 	def do_leader_action(self, action, key, value):
 		'''
