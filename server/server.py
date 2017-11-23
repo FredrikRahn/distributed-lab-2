@@ -446,7 +446,7 @@ class BlackboardRequestHandler(BaseHTTPRequestHandler):
 		@args: value:Value, Value to be added in store
 		@return: entry:List, [key, value]
 		'''
-		entry = self.server.add_value_to_store_from_leader(value=value)
+		entry = self.server.add_value_to_store_from_leader(key=key, value=value)
 		if entry:
 			self.send_response(200)
 			return entry
