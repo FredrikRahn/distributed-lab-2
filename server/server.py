@@ -83,12 +83,11 @@ class BlackboardServer(HTTPServer):
 	# We add a value received to the store
 	def add_value_to_store_from_leader(self, key, value):
 		'''
-		Adds a new value to store
+		Adds a new value to store from leader
 		@args: Value:String, Value to be added to store
 		@return: [Key:String, Value:String]
 		'''
 		# We add the value to the store
-		#TODO: uuid4
 		key = int(key)
 		if key not in self.store:
 			self.store[key]=value
@@ -444,7 +443,7 @@ class BlackboardRequestHandler(BaseHTTPRequestHandler):
 #------------------------------------------------------------------------------------------------------
 	def do_POST_add_entry_from_leader(self, key, value):
 		'''
-		Adds a new entry to store
+		Adds a new entry to store from leader
 		@args: value:Value, Value to be added in store
 		@return: entry:List, [key, value]
 		'''
