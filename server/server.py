@@ -104,7 +104,7 @@ class BlackboardServer(HTTPServer):
 		@return: [Key:Number, Value:String]
 		'''
 		if key in self.store:
-			self.store[key] = value                        
+			self.store[key] = value
 			return [key, value]
 		else:
 			raise KeyError('Key does not exist in store')
@@ -116,10 +116,9 @@ class BlackboardServer(HTTPServer):
 		@args:	Key:Number, Key to be deleted
 		@return: [Key:String]
 		'''
-		value = self.store[key]
 		if key in self.store:
 			del self.store[key]
-		return [key, value]
+		return [key, None]
 #------------------------------------------------------------------------------------------------------
 # Contact a specific vessel with a set of variables to transmit to it
 	def contact_vessel(self, vessel_ip, path, action, key, value):
