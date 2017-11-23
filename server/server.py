@@ -101,9 +101,10 @@ class BlackboardServer(HTTPServer):
 		@args:	Key:Number, Key to be deleted
 		@return: [Key:String]
 		'''
-		if key in self.store:					#if key exists
+		if key in self.store:
+			value = self.store[key]
 			del self.store[key]					#delete entry
-		return [key]
+		return [key, value]
 #------------------------------------------------------------------------------------------------------
 # Contact a specific vessel with a set of variables to transmit to it
 	def contact_vessel(self, vessel_ip, path, action, key, value):
@@ -404,9 +405,9 @@ class BlackboardRequestHandler(BaseHTTPRequestHandler):
 			key = post_data['key'][0]
 			value = post_data['value'][0]
 			print('Doing leader_action then propagating (action,key,value) ', action,key,value)
-			self.do_leader_action(action=action, key=key, value=value)
+			entry = self.do_leader_action(action=action, key=key, value=value)
 			#Then propagate to all other nodes
-			self.propagate_action(action=action, key=key, value=value)
+			self.propagate_action(action=action, key=entry[0], value=entry[1])
 			self.send_response(200)
 		else:
 			self.send_error(400, 'Invalid action for leader')
@@ -469,7 +470,7 @@ class BlackboardRequestHandler(BaseHTTPRequestHandler):
 		else:
 			self.send_error(400, 'Invalid Election Action')
 #------------------------------------------------------------------------------------------------------
-	def propagate_action(self, action, key='', value=''):
+	def propagate_action(self, action, key, value):
 		'''
 		Spawns a thread and propagates an action to other vessels
 		@args: action:String
@@ -502,12 +503,12 @@ class BlackboardRequestHandler(BaseHTTPRequestHandler):
 			thread.daemon = True
 			# We start the thread
 			thread.start()
-		# else:
-		# 	#This node is leader
-		# 	#Do action locally
-		# 	self.do_leader_action(action=action, key=key, value=value)
-		# 	#Propagate_action (to all other nodes)
-		# 	self.propagate_action(action=action, key=key, value=value)
+		else:
+			#This node is leader
+			#Do action locally
+			entry = self.do_leader_action(action=action, key=key, value=value)
+			#Propagate_action (to all other nodes)
+			self.propagate_action(action=action, key=entry[0], value=entry[1])
 #------------------------------------------------------------------------------------------------------
 	def do_leader_action(self, action, key, value):
 		'''
@@ -517,11 +518,14 @@ class BlackboardRequestHandler(BaseHTTPRequestHandler):
 		@args: value:String
 		'''
 		if action == 'add':
-			self.do_POST_add_entry(value)
+			entry = self.do_POST_add_entry(value)
+			return entry
 		elif action == 'modify':
-			self.do_POST_modify_entry(key, value)
+			entry = self.do_POST_modify_entry(key, value)
+			return entry
 		elif action == 'delete':
-			self.do_POST_delete_entry(key)
+			entry = self.do_POST_delete_entry(key)
+			return entry
 		else:
 			self.send_error(400, 'Invalid action')
 #------------------------------------------------------------------------------------------------------
