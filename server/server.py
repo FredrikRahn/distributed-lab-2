@@ -316,7 +316,7 @@ class BlackboardRequestHandler(BaseHTTPRequestHandler):
 		'''
 		fetch_index_entries = ""
 		for entryId, entryValue in self.server.store.items():
-			fetch_index_entries += entry_template % ("entries/" + str(entryId), entryId, entryValue)
+			fetch_index_entries += entry_template % ("entries/" + str(entryId), int(entryId), str(entryValue))
 		boardcontents = boardcontents_template % ("Title", fetch_index_entries)
 		return boardcontents
 #------------------------------------------------------------------------------------------------------
