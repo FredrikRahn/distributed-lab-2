@@ -317,6 +317,11 @@ class BlackboardRequestHandler(BaseHTTPRequestHandler):
 		'''
 		Handles incoming POST requests and routes them accordingly
 		'''
+
+                # Save time for benchmarking
+                with open(file_folder + "logs/" + "last_request_vessel_%d" % self.server.vessel_id, "w+") as file:
+		        file.write(json.dumps(time.time())+"\n")
+		
 		print("Receiving a POST on %s" % self.path)
 		path = self.path[1::].split('/')
 		if path[0] == 'board' and len(path) < 2:
