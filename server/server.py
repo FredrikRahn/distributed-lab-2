@@ -23,6 +23,7 @@ import ast
 file_folder = os.path.dirname(os.path.realpath(__file__)) + '/'
 # Global variables for HTML templates
 board_frontpage_header_template = open(file_folder + 'board_frontpage_header_template.html', 'r').read()
+leader_template = open(file_folder + 'leader.html', 'r').read()
 boardcontents_template = open(file_folder + 'boardcontents_template.html', 'r').read()
 entry_template = open(file_folder + 'entry_template.html', 'r').read()
 board_frontpage_footer_template = open(file_folder + 'board_frontpage_footer_template.html', 'r').read()
@@ -57,6 +58,8 @@ class BlackboardServer(HTTPServer):
 		self.leader_list = {'creator': vessel_id}
 		#init leader
 		self.leader = None
+		#init leader id
+		self.leader_ID = None
 		#init leader election
 		self.init_leader_election(self.leader_list)
                 #initate timer
@@ -79,6 +82,21 @@ class BlackboardServer(HTTPServer):
 		else:
 			raise KeyError('Can not add key (Already Exists)')
 #------------------------------------------------------------------------------------------------------
+	# We add a value received to the store
+	def add_value_to_store_from_leader(self, key, value):
+		'''
+		Adds a new value to store from leader
+		@args: Value:String, Value to be added to store
+		@return: [Key:String, Value:String]
+		'''
+		# We add the value to the store
+		key = int(key)
+		if key not in self.store:
+			self.store[key]=value
+			return [key, value]
+		else:
+			raise KeyError('Can not add key (Already Exists)')
+#------------------------------------------------------------------------------------------------------
 	# We modify a value received in the store
 	def modify_value_in_store(self, key, value):
 		'''
@@ -87,8 +105,9 @@ class BlackboardServer(HTTPServer):
 				Value:String, 	Value to be added to key
 		@return: [Key:Number, Value:String]
 		'''
-		if key in self.store:								#If Key exists
-			self.store[key] = value                         #update key value to value
+		key = int(key)
+		if key in self.store:
+			self.store[key] = value
 			return [key, value]
 		else:
 			raise KeyError('Key does not exist in store')
@@ -100,9 +119,10 @@ class BlackboardServer(HTTPServer):
 		@args:	Key:Number, Key to be deleted
 		@return: [Key:String]
 		'''
-		if key in self.store:					#if key exists
-			del self.store[key]					#delete entry
-		return [key]
+		key = int(key)
+		if key in self.store:
+			del self.store[key]
+		return [key, None]
 #------------------------------------------------------------------------------------------------------
 # Contact a specific vessel with a set of variables to transmit to it
 	def contact_vessel(self, vessel_ip, path, action, key, value):
@@ -164,11 +184,11 @@ class BlackboardServer(HTTPServer):
 				self.contact_vessel(vessel, path, action, key, value)
 #------------------------------------------------------------------------------------------------------
 	def leader_election(self, leader_list):
-                '''
-                Either creates a leader election and sends it's leader_list to neighbour,
-                or updates a recieved leader election message and sends the leader_list to neighbour
+		'''
+        Either creates a leader election and sends it's leader_list to neighbour,
+        or updates a recieved leader election message and sends the leader_list to neighbour
 		@args: leader_list:Dict, Dict with the vessels and their random ID.
-                '''
+		'''
 		#Convert leader_list to dict (from string)
 		if isinstance(leader_list, basestring):
 			leader_list = ast.literal_eval(leader_list)
@@ -195,20 +215,28 @@ class BlackboardServer(HTTPServer):
 			#print('Updated recieved leader_list = ', leader_list)
 			path = '/election'
 			self.contact_vessel(vessel_ip=next, path=path, action='election', key=None, value=leader_list)
-
 #------------------------------------------------------------------------------------------------------
 	def set_leader(self):
-                '''
+		'''
 		Sort leader_list after random_ID in reverse (Highest first)
 		Then take vessel_id in first tuple and set leader
 		'''
 		print(self.leader_list)
 		self.leader = sorted(self.leader_list.items(), key=lambda tuple: tuple[1], reverse = True)[0][0]
+		self.leader_ID = sorted(self.leader_list.items(), key=lambda tuple: tuple[1], reverse = True)[0][1]
+#------------------------------------------------------------------------------------------------------
+	def display_leader(self):
+		'''
+		Function used to insert the leader and its random ID into leader.html
+		'''
+		string = str(self.leader) + ' with random ID: ' + str(self.leader_ID)
+		leader = leader_template % string
+		return leader
 #------------------------------------------------------------------------------------------------------
 	def init_leader_election(self, leader_list):
-                '''
+		'''
 		Initializes leader election, starts a thread that sleeps
-                for 2 seconds and then starts leader election.a
+        for 2 seconds and then starts leader election.a
 		@args: leader_list:Dict, Dict with the vessels and their random ID.
 		'''
 		leader_election_thread = Timer(2, self.leader_election, [leader_list])
@@ -275,11 +303,12 @@ class BlackboardRequestHandler(BaseHTTPRequestHandler):
 		# We set the response status code to 200 (OK)
 		self.set_HTTP_headers(200)
 
+		leader = self.server.display_leader()
 		fetch_index_header = board_frontpage_header_template
 		fetch_index_contents = self.board_helper()
 		fetch_index_footer = board_frontpage_footer_template
 
-		html_response = fetch_index_header + fetch_index_contents + fetch_index_footer
+		html_response = leader + fetch_index_header + fetch_index_contents + fetch_index_footer
 
 		self.wfile.write(html_response)
 #------------------------------------------------------------------------------------------------------
@@ -290,7 +319,7 @@ class BlackboardRequestHandler(BaseHTTPRequestHandler):
 		'''
 		fetch_index_entries = ""
 		for entryId, entryValue in self.server.store.items():
-			fetch_index_entries += entry_template %("entries/" + str(entryId), entryId, entryValue)
+			fetch_index_entries += entry_template % ("entries/" + str(entryId), int(entryId), str(entryValue))
 		boardcontents = boardcontents_template % ("Title", fetch_index_entries)
 		return boardcontents
 #------------------------------------------------------------------------------------------------------
@@ -379,7 +408,7 @@ class BlackboardRequestHandler(BaseHTTPRequestHandler):
 			value = post_data['value'][0]
 			key = post_data['key'][0]
 			if action == 'add':
-				self.do_POST_add_entry(value)
+				self.do_POST_add_entry_from_leader(key, value)
 			elif action == 'modify':
 				self.do_POST_modify_entry(key, value)
 			elif action == 'delete':
@@ -388,9 +417,9 @@ class BlackboardRequestHandler(BaseHTTPRequestHandler):
 				self.send_error(400, 'Invalid action')
 #------------------------------------------------------------------------------------------------------
 	def do_POST_leader(self):
-                '''
-	        Parses post data, completes the action locally 
-                and then propagates the action to other vessels.
+		'''
+	    Parses post data, completes the action locally
+        and then propagates the action to other vessels.
 		'''
 		#We only arrive here if we are the leader
 		#Do action
@@ -400,9 +429,9 @@ class BlackboardRequestHandler(BaseHTTPRequestHandler):
 			key = post_data['key'][0]
 			value = post_data['value'][0]
 			print('Doing leader_action then propagating (action,key,value) ', action,key,value)
-			self.do_leader_action(action=action, key=key, value=value)
+			entry = self.do_leader_action(action=action, key=key, value=value)
 			#Then propagate to all other nodes
-			self.propagate_action(action=action, key=key, value=value)
+			self.propagate_action(action=action, key=entry[0], value=entry[1])
 			self.send_response(200)
 		else:
 			self.send_error(400, 'Invalid action for leader')
@@ -420,9 +449,21 @@ class BlackboardRequestHandler(BaseHTTPRequestHandler):
 		else:
 			self.send_error(400, "Value was not added.")
 #------------------------------------------------------------------------------------------------------
+	def do_POST_add_entry_from_leader(self, key, value):
+		'''
+		Adds a new entry to store from leader
+		@args: value:Value, Value to be added in store
+		@return: entry:List, [key, value]
+		'''
+		entry = self.server.add_value_to_store_from_leader(key=key, value=value)
+		if entry:
+			self.send_response(200)
+			return entry
+		else:
+			self.send_error(400, "Value was not added.")
+#------------------------------------------------------------------------------------------------------
 	def do_POST_modify_entry(self, entryID, value):
 		'''
-
 		Modifies a specific entry in store
 		@args: entryID:String, ID of entry to be modified
 		@args: value:String, new value to be assigned to entryID
@@ -434,7 +475,7 @@ class BlackboardRequestHandler(BaseHTTPRequestHandler):
 			return entry
 		else:
 			 self.send_error(400, 'Entry not modified')
-p#------------------------------------------------------------------------------------------------------
+#------------------------------------------------------------------------------------------------------
 	def do_POST_delete_entry(self, entryID):
 		'''
 		Deletes an entry in store
@@ -449,7 +490,7 @@ p#------------------------------------------------------------------------------
 			 self.send_error(400, 'Entry not deleted')
 #------------------------------------------------------------------------------------------------------
 	def do_POST_election(self):
-                '''
+		'''
 		Parses the post data, then spawns a thread for leader election
 		'''
 		post_data = self.parse_POST_request()
@@ -466,7 +507,7 @@ p#------------------------------------------------------------------------------
 		else:
 			self.send_error(400, 'Invalid Election Action')
 #------------------------------------------------------------------------------------------------------
-	def propagate_action(self, action, key='', value=''):
+	def propagate_action(self, action, key, value):
 		'''
 		Spawns a thread and propagates an action to other vessels
 		@args: action:String
@@ -482,8 +523,8 @@ p#------------------------------------------------------------------------------
 		thread.start()
 #------------------------------------------------------------------------------------------------------
 	def propagate_action_to_leader(self, action, key='', value=''):
-                '''
-	        Spawns a thread that propagates an action to the leader vessel
+		'''
+	    Spawns a thread that propagates an action to the leader vessel
 		@args: action:String
 		@args: key:String
 		@args: value:String
@@ -502,23 +543,26 @@ p#------------------------------------------------------------------------------
 		else:
 			#This node is leader
 			#Do action locally
-			self.do_leader_action(action=action, key=key, value=value)
+			entry = self.do_leader_action(action=action, key=key, value=value)
 			#Propagate_action (to all other nodes)
-			self.propagate_action(action=action, key=key, value=value)
+			self.propagate_action(action=action, key=entry[0], value=entry[1])
 #------------------------------------------------------------------------------------------------------
 	def do_leader_action(self, action, key, value):
-                '''
+		'''
 		Specific function for leader to do action locally.
 		@args: action:String
 		@args: key:String
 		@args: value:String
 		'''
 		if action == 'add':
-			self.do_POST_add_entry(value)
+			entry = self.do_POST_add_entry(value)
+			return entry
 		elif action == 'modify':
-			self.do_POST_modify_entry(key, value)
+			entry = self.do_POST_modify_entry(key, value)
+			return entry
 		elif action == 'delete':
-			self.do_POST_delete_entry(key)
+			entry = self.do_POST_delete_entry(key)
+			return entry
 		else:
 			self.send_error(400, 'Invalid action')
 #------------------------------------------------------------------------------------------------------
