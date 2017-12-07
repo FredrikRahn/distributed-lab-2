@@ -352,7 +352,7 @@ class BlackboardRequestHandler(BaseHTTPRequestHandler):
                 # Save time for benchmarking
                 with open(file_folder + "logs/" + "last_request_vessel_%d" % self.server.vessel_id, "w+") as file:
                         if(self.server.start_time == 0):
-                                self.server.start_time == time.time()
+                                self.server.start_time = time.time()
                         runtime = time.time() - self.server.start_time
 		        file.write(json.dumps(runtime)+"\n")
 		
