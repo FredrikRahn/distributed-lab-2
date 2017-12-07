@@ -59,6 +59,8 @@ class BlackboardServer(HTTPServer):
 		self.leader = None
 		#init leader election
 		self.init_leader_election(self.leader_list)
+                #initate timer
+                self.start_time = time.time()
 #------------------------------------------------------------------------------------------------------
 	# We add a value received to the store
 	def add_value_to_store(self, value):
@@ -320,7 +322,8 @@ class BlackboardRequestHandler(BaseHTTPRequestHandler):
 
                 # Save time for benchmarking
                 with open(file_folder + "logs/" + "last_request_vessel_%d" % self.server.vessel_id, "w+") as file:
-		        file.write(json.dumps(time.time())+"\n")
+                        runtime = [self.server.start_time, time.time()]
+		        file.write(json.dumps(time)+"\n")
 		
 		print("Receiving a POST on %s" % self.path)
 		path = self.path[1::].split('/')
